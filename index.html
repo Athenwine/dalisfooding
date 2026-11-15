@@ -113,11 +113,13 @@ function App(){
  const [f,setF]=useState({name:'',phone:'',tax:'',zone:'Bizerte',addr:'',date:'',slot:SLOTS[1]});
  const [sent,setSent]=useState(false);
  const [rb,setRb]=useState('ba29');
+ const [toast,setToast]=useState('');
+ const notify=m=>{setToast(m);clearTimeout(window.__t);window.__t=setTimeout(()=>setToast(''),2200)};
  const [sending,setSending]=useState(false);
  const [mailErr,setMailErr]=useState(false);
  const [last,setLast]=useState(null);
  const step=p=>pro?p.moq:1;
- const add=(p,n)=>{setCart(c=>({...c,[p.id]:(c[p.id]||0)+(n||step(p))}));setOpen(true)};
+ const add=(p,n)=>{setCart(c=>({...c,[p.id]:(c[p.id]||0)+(n||step(p))}));notify('Ajouté au panier ✓')};
  const rm=id=>setCart(c=>{const o={...c};delete o[id];return o});
  const chg=(id,d)=>setCart(c=>{const q=(c[id]||0)+d;const o={...c};if(q<=0)delete o[id];else o[id]=q;return o});
  const lines=Object.entries(cart).map(([id,q])=>({p:byId(id),q}));
@@ -147,8 +149,8 @@ function App(){
  const stages=STAGES.map((s,i)=>[i,s]).filter(([i])=>filter==='all'||filter===String(i));
  const b=byId(pb.base),s=byId(pb.sauce),tops=pb.top.map(byId);
  const toggleTop=id=>setPb(x=>({...x,top:x.top.includes(id)?x.top.filter(t=>t!==id):[...x.top,id]}));
- const addPairing=()=>{[b,s,...tops].forEach(p=>setCart(c=>({...c,[p.id]:(c[p.id]||0)+step(p)})));setOpen(true)};
- const addRecipe=r=>{r.items.forEach(id=>{const p=byId(id==='BASE'?rb:id);setCart(c=>({...c,[p.id]:(c[p.id]||0)+step(p)}))});setOpen(true)};
+ const addPairing=()=>{[b,s,...tops].forEach(p=>setCart(c=>({...c,[p.id]:(c[p.id]||0)+step(p)})));notify('Ajouté au panier ✓')};
+ const addRecipe=r=>{r.items.forEach(id=>{const p=byId(id==='BASE'?rb:id);setCart(c=>({...c,[p.id]:(c[p.id]||0)+step(p)}))});notify('Produits ajoutés au panier ✓')};
  const nameRecipe=()=>{
   if(s.id==='pe25'&&tops.length===0) return 'Pizza pesto, nue et verte';
   const t=tops.map(x=>x.id);
@@ -239,9 +241,11 @@ function App(){
  <footer class="border-t line"><div class="max-w-6xl mx-auto px-4 py-10 flex flex-wrap justify-between gap-4 text-sm opacity-70">
   <span class="disp text-lg opacity-100">Dali’s.</span><a href="https://wa.me/21625226152" target="_blank" rel="noopener">Une question ? WhatsApp : +216 25 226 152</a><span>Produit par FOODING · Bizerte</span></div></footer>
 
+ ${count>0&&!open&&html`<button type="button" class="btn fixed left-4 right-4 bottom-4 z-30 md:hidden flex items-center justify-between" onClick=${()=>setOpen(true)}><span>Voir le panier · ${count}</span><span>${money(sub)}</span></button>`}
+ ${toast&&html`<div class="fixed left-1/2 -translate-x-1/2 bottom-20 z-30 text-sm px-4 py-2 rounded-full border line" style=${{background:'#1c1c1b'}}>${toast}</div>`}
  <div class=${'fixed inset-0 z-40 transition '+(open?'bg-black/60':'pointer-events-none bg-transparent')} onClick=${()=>setOpen(false)}></div>
  <aside class=${'drawer fixed top-0 right-0 bottom-0 z-50 w-full max-w-md flex flex-col '+(open?'translate-x-0':'translate-x-full')} style=${{background:'#1c1c1b',paddingTop:'env(safe-area-inset-top,0px)',paddingBottom:'env(safe-area-inset-bottom,0px)'}} aria-hidden=${!open}>
-  <div class="flex items-center justify-between p-5 border-b line"><h2 class="disp text-xl">Panier ${pro?'Pro':''}</h2><button onClick=${()=>setOpen(false)} aria-label="Fermer"><${X} size=${22}/></button></div>
+  <div class="flex items-center justify-between p-5 border-b line"><h2 class="disp text-xl">Panier ${pro?'Pro':''}</h2><button type="button" class="ghost text-sm" style=${{padding:'.5rem .9rem'}} onClick=${()=>setOpen(false)} aria-label="Fermer le panier">← Continuer mes achats</button></div>
   <div class="flex-1 overflow-y-auto p-5 grid gap-5 content-start">
    ${sent&&html`<div class="border line rounded-xl p-4 text-sm flex gap-3" style=${{color:'var(--sage)'}}><${Check} size=${18}/>Commande envoyée ! Nous vous contactons rapidement pour confirmer la livraison.</div>`}
    ${lines.length===0&&html`<div class="text-center py-10 opacity-70"><p>Votre panier est vide.</p>${last?html`<button class="btn mt-4 inline-flex gap-2 items-center" onClick=${reorder}><${Repeat} size=${16}/>Recommander la dernière commande</button>`:html`<a href="#catalogue" class="ghost inline-block mt-4" onClick=${()=>setOpen(false)}>Parcourir le catalogue</a>`}</div>`}
