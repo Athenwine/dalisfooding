@@ -4,6 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Dali’s Food Industries</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#171715">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Dali’s">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@125,800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com/3.4.17"></script>
 <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
@@ -33,7 +42,8 @@ select option{background:#161615}
 <body>
 <div id="root"></div>
 <script>
-const {useState,useMemo}=React;
+const {useState,useMemo,useEffect}=React;
+if('serviceWorker' in navigator&&location.protocol.indexOf('http')===0)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 const html=htm.bind(React.createElement);
 const L=window.lucideReact||{};
 const I=(n)=>(p)=>{const C=L[n];return C?React.createElement(C,p):null};
@@ -114,7 +124,13 @@ function App(){
  const [sent,setSent]=useState(false);
  const [rb,setRb]=useState('ba29');
  const [toast,setToast]=useState('');
- const notify=m=>{setToast(m);clearTimeout(window.__t);window.__t=setTimeout(()=>setToast(''),2200)};
+ const notify=(m,t)=>{setToast(m);clearTimeout(window.__t);window.__t=setTimeout(()=>setToast(''),t||2200)};
+ const [inst,setInst]=useState(null);
+ useEffect(()=>{const h=e=>{e.preventDefault();setInst(e)};window.addEventListener('beforeinstallprompt',h);return()=>window.removeEventListener('beforeinstallprompt',h)},[]);
+ const standalone=window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;
+ const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+ const canInstall=!standalone&&(inst||isIOS);
+ const install=async()=>{if(inst){inst.prompt();try{await inst.userChoice}catch(e){}setInst(null)}else notify('Sur iPhone : touchez Partager, puis « Sur l’écran d’accueil »',5000)};
  const [sending,setSending]=useState(false);
  const [mailErr,setMailErr]=useState(false);
  const [last,setLast]=useState(null);
@@ -239,7 +255,7 @@ function App(){
  </div></section>
 
  <footer class="border-t line"><div class="max-w-6xl mx-auto px-4 py-10 flex flex-wrap justify-between gap-4 text-sm opacity-70">
-  <span class="disp text-lg opacity-100">Dali’s.</span><a href="https://wa.me/21625226152" target="_blank" rel="noopener">Une question ? WhatsApp : +216 25 226 152</a><span>Produit par FOODING · Bizerte</span></div></footer>
+  <span class="disp text-lg opacity-100">Dali’s.</span><a href="https://wa.me/21625226152" target="_blank" rel="noopener">Une question ? WhatsApp : +216 25 226 152</a>${canInstall&&html`<button type="button" class="underline" onClick=${install}>Installer l’app</button>`}<span>Produit par FOODING · Bizerte</span></div></footer>
 
  ${count>0&&!open&&html`<button type="button" class="btn fixed left-4 right-4 bottom-4 z-30 md:hidden flex items-center justify-between" onClick=${()=>setOpen(true)}><span>Voir le panier · ${count}</span><span>${money(sub)}</span></button>`}
  ${toast&&html`<div class="fixed left-1/2 -translate-x-1/2 bottom-20 z-30 text-sm px-4 py-2 rounded-full border line" style=${{background:'#1c1c1b'}}>${toast}</div>`}
